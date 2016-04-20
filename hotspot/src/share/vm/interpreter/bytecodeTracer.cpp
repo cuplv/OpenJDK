@@ -126,7 +126,7 @@ class BytecodePrinter: public BytecodeClosure {
            //BytecodeCounter::counter_value(), bci, Bytecodes::name(code));
     //}
     _next_pc = is_wide() ? bcp+2 : bcp+1;
-    print_attributes(bci);
+    //print_attributes(bci);
     // Set is_wide for the next one, since the caller of this doesn't skip
     // the next bytecode.
     _is_wide = (code == Bytecodes::_wide);
