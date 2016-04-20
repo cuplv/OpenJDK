@@ -30,11 +30,11 @@
 
 DEBUG_ONLY(class ResourceMark;)
 
-class hashingOutputStream : public outputStream{
-public:
-   void print(const char* format, ...);
-   void print_cr(const char* format, ...);
-};
+//class hashingOutputStream : public outputStream{
+//public:
+   //void print(const char* format, ...);
+   //void print_cr(const char* format, ...);
+//};
 
 // Output streams for printing
 //
