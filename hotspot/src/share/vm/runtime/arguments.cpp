@@ -41,6 +41,9 @@
 #include "utilities/defaultStream.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/taskqueue.hpp"
+
+#include "interpreter/bytecodes.hpp"
+#include <iostream>
 #ifdef TARGET_OS_FAMILY_linux
 # include "os_linux.inline.hpp"
 #endif
@@ -2804,6 +2807,11 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
     } else if (match_option(option, "-Xprintflags", &tail)) {
       CommandLineFlags::printFlags(tty, false);
       vm_exit(0);
+
+    }else if (match_option(option,"-newFlag",&tail))
+    {
+        newFlag = true;
+        std::cout<<"This is my new flag!"<<std::endl;
 #endif
     // -D
     } else if (match_option(option, "-D", &tail)) {
