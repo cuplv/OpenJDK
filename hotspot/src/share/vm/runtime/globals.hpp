@@ -1289,6 +1289,9 @@ class CommandLineFlags {
   develop(bool, TraceBytecodes, false,                                      \
           "Trace bytecode execution")                                       \
                                                                             \
+  develop(bool, newFlag, false,                                      \
+          "Trace bytecode execution")                                       \
+                                                                            \
   develop(bool, TraceClassInitialization, false,                            \
           "Trace class initialization")                                     \
                                                                             \
