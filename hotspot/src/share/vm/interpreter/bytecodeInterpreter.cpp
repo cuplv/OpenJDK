@@ -42,6 +42,9 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/threadCritical.hpp"
 #include "utilities/exceptions.hpp"
+
+#include <iostream>
+
 #ifdef TARGET_OS_ARCH_linux_x86
 # include "orderAccess_linux_x86.inline.hpp"
 #endif
@@ -167,6 +170,8 @@
                                    topOfStack[Interpreter::expr_index_at(2)]),  \
                                    handle_exception);                      \
     }                                                                      \
+	if (newFlag)
+		std::cout<<"made it here!"<<std::endl;
 }
 #endif
 

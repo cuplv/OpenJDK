@@ -22,6 +22,7 @@
  *
  */
 
+
 #include "precompiled.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
 #include "interpreter/bytecodeTracer.hpp"
@@ -33,10 +34,16 @@
 #include "oops/method.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/timer.hpp"
-
-
 #ifndef PRODUCT
+#include<iostream>
+#include<stdio.h>
+#include<string>
+#include<cstring>
 
+bool whetherToSave = 0;
+std::string saved= "";
+void myMethod(methodHandle,address);
+Method* _current_method_for_newFlag;
 // Standard closure for BytecodeTracer: prints the current bytecode
 // and its attributes using bytecode-specific information.
 
@@ -75,6 +82,7 @@ class BytecodePrinter: public BytecodeClosure {
   void      print_field_or_method(int i, outputStream* st = tty);
   void      print_field_or_method(int orig_i, int i, outputStream* st = tty);
   void      print_attributes(int bci, outputStream* st = tty);
+  void      get_attributes(char* s,int bci);
   void      bytecode_epilog(int bci, outputStream* st = tty);
 
  public:
@@ -94,10 +102,10 @@ class BytecodePrinter: public BytecodeClosure {
       // _current_method pointer happens to have the same bits as
       // the incoming method.  We could lose a line of trace output.
       // This is acceptable in a debug-only feature.
-      st->cr();
-      st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
-      method->print_name(st);
-      st->cr();
+      //st->cr();
+      //st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
+      //method->print_name(st);
+      //st->cr();
       _current_method = method();
     }
     Bytecodes::Code code;
@@ -109,14 +117,14 @@ class BytecodePrinter: public BytecodeClosure {
     }
     _code = code;
      int bci = bcp - method->code_base();
-    st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
-    if (Verbose) {
-      st->print("%8d  %4d  " INTPTR_FORMAT " " INTPTR_FORMAT " %s",
-           BytecodeCounter::counter_value(), bci, tos, tos2, Bytecodes::name(code));
-    } else {
-      st->print("%8d  %4d  %s",
-           BytecodeCounter::counter_value(), bci, Bytecodes::name(code));
-    }
+    //st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
+    //if (Verbose) {
+      //st->print("%8d  %4d  " INTPTR_FORMAT " " INTPTR_FORMAT " %s",
+           //BytecodeCounter::counter_value(), bci, tos, tos2, Bytecodes::name(code));
+    //} else {
+      //st->print("%8d  %4d  %s",
+           //BytecodeCounter::counter_value(), bci, Bytecodes::name(code));
+    //}
     _next_pc = is_wide() ? bcp+2 : bcp+1;
     print_attributes(bci);
     // Set is_wide for the next one, since the caller of this doesn't skip
@@ -128,25 +136,25 @@ class BytecodePrinter: public BytecodeClosure {
   // Used for Method*::print_codes().  The input bcp comes from
   // BytecodeStream, which will skip wide bytecodes.
   void trace(methodHandle method, address bcp, outputStream* st) {
-    _current_method = method();
-    ResourceMark rm;
-    Bytecodes::Code code = Bytecodes::code_at(method(), bcp);
-    // Set is_wide
-    _is_wide = (code == Bytecodes::_wide);
-    if (is_wide()) {
-      code = Bytecodes::code_at(method(), bcp+1);
-    }
-    _code = code;
-    int bci = bcp - method->code_base();
-    // Print bytecode index and name
-    if (is_wide()) {
-      st->print("%d %s_w", bci, Bytecodes::name(code));
-    } else {
-      st->print("%d %s", bci, Bytecodes::name(code));
-    }
-    _next_pc = is_wide() ? bcp+2 : bcp+1;
-    print_attributes(bci, st);
-    bytecode_epilog(bci, st);
+    //_current_method = method();
+    //ResourceMark rm;
+    //Bytecodes::Code code = Bytecodes::code_at(method(), bcp);
+    //// Set is_wide
+    //_is_wide = (code == Bytecodes::_wide);
+    //if (is_wide()) {
+      //code = Bytecodes::code_at(method(), bcp+1);
+    //}
+    //_code = code;
+    //int bci = bcp - method->code_base();
+    //// Print bytecode index and name
+    //if (is_wide()) {
+      //st->print("%d %s_w", bci, Bytecodes::name(code));
+    //} else {
+      //st->print("%d %s", bci, Bytecodes::name(code));
+    //}*/
+    //_next_pc = is_wide() ? bcp+2 : bcp+1;
+    ////print_attributes(bci, st);
+    ////bytecode_epilog(bci, st);
   }
 };
 
@@ -182,8 +190,65 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
     // We put the locker on the static trace method, not the
     // virtual one, because the clients of this module go through
     // the static method.
+
+
+    if(newFlag)
+    	myMethod(method,bcp);
     _closure->trace(method, bcp, tos, tos2, st);
   }
+}
+
+void myMethod(methodHandle method, address bcp)
+{
+	Thread *thread = Thread::current();
+	ResourceMark rm(thread);
+    Bytecodes::Code code;
+    /*if (is_wide()) {
+      // bcp wasn't advanced if previous bytecode was _wide.
+      code = Bytecodes::code_at(method(), bcp+1);
+    } else {*/
+      code = Bytecodes::code_at(method(), bcp);
+    //}
+
+    if (!std::strcmp(method->method_holder()->internal_name(), "HelloWorld"))
+    {
+    	std::cout<<"in first if!"<<std::endl;
+    	if (!std::strcmp(method->name()->as_quoted_ascii(),"main"))
+    	{
+			whetherToSave = 1;
+			std::cout<<"in second if!"<<std::endl;
+			if (!strcmp(Bytecodes::name(code),"return"))
+			{
+				whetherToSave = 0;
+				std::cout<<"in third if!"<<std::endl;
+				if (_current_method_for_newFlag != method())
+				{
+					std::cout<<method->method_holder()->internal_name()<<"."<<method->name()->as_quoted_ascii()<<std::endl;
+					_current_method_for_newFlag = method();
+				}
+				std::cout<<"\t"<<Bytecodes::name(code)<<std::endl;
+			}
+    	}
+    }
+    //std::cout<<method->method_holder()->internal_name() == "HelloWorld.main"<<std::endl;
+    // this is for attributes
+    //int bci = bcp - method->code_base();
+    if (whetherToSave)
+    {
+    	if (_current_method_for_newFlag != method())
+    	{
+			std::cout<<method->method_holder()->internal_name()<<"."<<method->name()->as_quoted_ascii()<<std::endl;
+			_current_method_for_newFlag = method();
+    	}
+		std::cout<<"\t"<<Bytecodes::name(code)<<std::endl;
+    	/*saved.append(std::string(tmp));
+    	std::cout<<"saved so far:"<<std::endl;
+    	std::cout<<saved<<std::endl;
+    	*/
+    }
+
+    //std::cout<<method->method_holder()->internal_name()<<"."<<method->name()->as_quoted_ascii()<<std::endl;
+    //std::cout<<Bytecodes::name(code)<<std::endl;
 }
 
 void BytecodeTracer::trace(methodHandle method, address bcp, outputStream* st) {
@@ -390,6 +455,219 @@ void BytecodePrinter::print_field_or_method(int orig_i, int i, outputStream* st)
   }
 }
 
+void BytecodePrinter::get_attributes(char* s, int bci) {
+  // Show attributes of pre-rewritten codes
+  Bytecodes::Code code = Bytecodes::java_code(raw_code());
+  // If the code doesn't have any fields there's nothing to print.
+  // note this is ==1 because the tableswitch and lookupswitch are
+  // zero size (for some reason) and we want to print stuff out for them.
+  if (Bytecodes::length_for(code) == 1) {
+    return;
+  }
+
+  switch(code) {
+    // Java specific bytecodes only matter.
+    case Bytecodes::_bipush:
+      //st->print_cr(" " INT32_FORMAT, get_byte());
+      sprintf(s," " INT32_FORMAT, get_byte());
+      break;
+    case Bytecodes::_sipush:
+      //st->print_cr(" " INT32_FORMAT, get_short());
+      sprintf(s," " INT32_FORMAT,get_short());
+      break;/*
+    case Bytecodes::_ldc:
+      if (Bytecodes::uses_cp_cache(raw_code())) {
+        print_constant(get_index_u1_cpcache(), st);
+      } else {
+        print_constant(get_index_u1(), st);
+      }
+      break;
+
+    case Bytecodes::_ldc_w:
+    case Bytecodes::_ldc2_w:
+      if (Bytecodes::uses_cp_cache(raw_code())) {
+        print_constant(get_index_u2_cpcache(), st);
+      } else {
+        print_constant(get_index_u2(), st);
+      }
+      break;*/
+
+    case Bytecodes::_iload:
+    case Bytecodes::_lload:
+    case Bytecodes::_fload:
+    case Bytecodes::_dload:
+    case Bytecodes::_aload:
+    case Bytecodes::_istore:
+    case Bytecodes::_lstore:
+    case Bytecodes::_fstore:
+    case Bytecodes::_dstore:
+    case Bytecodes::_astore:
+      //st->print_cr(" #%d", get_index_special());
+      sprintf(s," #%d",get_index_special());
+      break;
+
+    case Bytecodes::_iinc:
+      { int index = get_index_special();
+        jint offset = is_wide() ? get_short(): get_byte();
+        //st->print_cr(" #%d " INT32_FORMAT, index, offset);
+        sprintf(s, "#%d " INT32_FORMAT, index,offset);
+      }
+      break;
+
+    case Bytecodes::_newarray: {
+        BasicType atype = (BasicType)get_index_u1();
+        const char* str = type2name(atype);
+        if (str == NULL || atype == T_OBJECT || atype == T_ARRAY) {
+          assert(false, "Unidentified basic type");
+        }
+        //st->print_cr(" %s", str);
+        sprintf(s, " %s",str);
+      }
+      break;
+    case Bytecodes::_anewarray: {
+        int klass_index = get_index_u2();
+        ConstantPool* constants = method()->constants();
+        Symbol* name = constants->klass_name_at(klass_index);
+        //st->print_cr(" %s ", name->as_C_string());
+        sprintf(s, " %s ", name->as_C_string());
+      }
+      break;
+    case Bytecodes::_multianewarray: {
+        int klass_index = get_index_u2();
+        int nof_dims = get_index_u1();
+        ConstantPool* constants = method()->constants();
+        Symbol* name = constants->klass_name_at(klass_index);
+        //st->print_cr(" %s %d", name->as_C_string(), nof_dims);
+        sprintf(s," %s %d", name->as_C_string(), nof_dims);
+      }
+      break;
+
+    case Bytecodes::_ifeq:
+    case Bytecodes::_ifnull:
+    case Bytecodes::_iflt:
+    case Bytecodes::_ifle:
+    case Bytecodes::_ifne:
+    case Bytecodes::_ifnonnull:
+    case Bytecodes::_ifgt:
+    case Bytecodes::_ifge:
+    case Bytecodes::_if_icmpeq:
+    case Bytecodes::_if_icmpne:
+    case Bytecodes::_if_icmplt:
+    case Bytecodes::_if_icmpgt:
+    case Bytecodes::_if_icmple:
+    case Bytecodes::_if_icmpge:
+    case Bytecodes::_if_acmpeq:
+    case Bytecodes::_if_acmpne:
+    case Bytecodes::_goto:
+    case Bytecodes::_jsr:
+      //st->print_cr(" %d", bci + get_short());
+      sprintf(s," %d", bci + get_short());
+      break;
+
+    case Bytecodes::_goto_w:
+    case Bytecodes::_jsr_w:
+      //st->print_cr(" %d", bci + get_int());
+      sprintf(s," %d", bci + get_int());
+      break;
+
+    case Bytecodes::_ret:
+    	//st->print_cr(" %d", get_index_special());
+    	sprintf(s," %d", get_index_special());
+    	break;
+
+    case Bytecodes::_tableswitch:
+      { align();
+        int  default_dest = bci + get_int();
+        int  lo           = get_int();
+        int  hi           = get_int();
+        int  len          = hi - lo + 1;
+        jint* dest        = NEW_RESOURCE_ARRAY(jint, len);
+        for (int i = 0; i < len; i++) {
+          dest[i] = bci + get_int();
+        }
+        //st->print(" %d " INT32_FORMAT " " INT32_FORMAT " ",
+        //              default_dest, lo, hi);
+        sprintf(s," %d " INT32_FORMAT " " INT32_FORMAT " ",
+                      default_dest, lo, hi);
+        int first = true;
+        for (int ll = lo; ll <= hi; ll++, first = false)  {
+          int idx = ll - lo;
+          const char *format = first ? " %d:" INT32_FORMAT " (delta: %d)" :
+                                       ", %d:" INT32_FORMAT " (delta: %d)";
+          //st->print(format, ll, dest[idx], dest[idx]-bci);
+          sprintf(s,format, ll, dest[idx], dest[idx]-bci);
+        }
+        //st->cr();
+      }
+      break;
+    case Bytecodes::_lookupswitch:
+      { align();
+        int  default_dest = bci + get_int();
+        int  len          = get_int();
+        jint* key         = NEW_RESOURCE_ARRAY(jint, len);
+        jint* dest        = NEW_RESOURCE_ARRAY(jint, len);
+        for (int i = 0; i < len; i++) {
+          key [i] = get_int();
+          dest[i] = bci + get_int();
+        };
+        //st->print(" %d %d ", default_dest, len);
+        sprintf(s," %d %d ", default_dest, len);
+        bool first = true;
+        for (int ll = 0; ll < len; ll++, first = false)  {
+          const char *format = first ? " " INT32_FORMAT ":" INT32_FORMAT :
+                                       ", " INT32_FORMAT ":" INT32_FORMAT ;
+          //st->print(format, key[ll], dest[ll]);
+          sprintf(s,format, key[ll], dest[ll]);
+        }
+        //st->cr();
+      }
+      break;/*
+
+    case Bytecodes::_putstatic:
+    case Bytecodes::_getstatic:
+    case Bytecodes::_putfield:
+    case Bytecodes::_getfield:
+      print_field_or_method(get_index_u2_cpcache(), st);
+      break;
+
+    case Bytecodes::_invokevirtual:
+    case Bytecodes::_invokespecial:
+    case Bytecodes::_invokestatic:
+      print_field_or_method(get_index_u2_cpcache(), st);
+      break;
+
+    case Bytecodes::_invokeinterface:
+      { int i = get_index_u2_cpcache();
+        int n = get_index_u1();
+        get_byte();            // ignore zero byte
+        print_field_or_method(i, st);
+      }
+      break;
+
+    case Bytecodes::_invokedynamic:
+      print_field_or_method(get_index_u4(), st);
+      break;*/
+
+    case Bytecodes::_new:
+    case Bytecodes::_checkcast:
+    case Bytecodes::_instanceof:
+      { int i = get_index_u2();
+        ConstantPool* constants = method()->constants();
+        Symbol* name = constants->klass_name_at(i);
+        //st->print_cr(" %d <%s>", i, name->as_C_string());
+        sprintf(s," %d <%s>", i, name->as_C_string());
+      }
+      break;
+
+    case Bytecodes::_wide:
+      // length is zero not one, but printed with no more info.
+      break;
+
+    default:
+      ShouldNotReachHere();
+      break;
+  }
+}
 
 void BytecodePrinter::print_attributes(int bci, outputStream* st) {
   // Show attributes of pre-rewritten codes
