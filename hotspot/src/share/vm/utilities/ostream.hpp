@@ -30,11 +30,6 @@
 
 DEBUG_ONLY(class ResourceMark;)
 
-//class hashingOutputStream : public outputStream{
-//public:
-   //void print(const char* format, ...);
-   //void print_cr(const char* format, ...);
-//};
 
 // Output streams for printing
 //
@@ -86,8 +81,8 @@ class outputStream : public ResourceObj {
    void set_position(int pos)   { _position = pos; }
 
    // printing
-   void print(const char* format, ...);
-   void print_cr(const char* format, ...);
+   virtual void print(const char* format, ...);
+   virtual void print_cr(const char* format, ...);
    void vprint(const char *format, va_list argptr);
    void vprint_cr(const char* format, va_list argptr);
    void print_raw(const char* str)            { write(str, strlen(str)); }
@@ -128,6 +123,22 @@ class outputStream : public ResourceObj {
    void inc_cr() { inc(); cr(); }
 };
 
+class hashingOutputStream : public outputStream{
+protected:
+	unsigned long hash;
+	bool toHash;
+public:
+	//creation
+
+	hashingOutputStream();
+   void print(const char* format, ...);
+   void print_cr(const char* format, ...);
+   void updateHash(const char* str);
+   unsigned long getHash();
+   void cr() {return;}
+   void write(const char* str, size_t len) {};
+   void setToHash(bool b) {toHash = b;}
+};
 // standard output
 // ANSI C++ name collision
 extern outputStream* tty;           // tty output
