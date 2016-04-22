@@ -21,7 +21,7 @@
  * questions.
  *
  */
-
+#include <iostream>
 #include "precompiled.hpp"
 #include "compiler/compileLog.hpp"
 #include "oops/oop.inline.hpp"
@@ -53,6 +53,11 @@ outputStream::outputStream(int width) {
   _indentation = 0;
 }
 
+hashingOutputStream::hashingOutputStream()
+{
+	hash = 5381;
+	toHash = false;
+}
 outputStream::outputStream(int width, bool has_time_stamps) {
   _width       = width;
   _position    = 0;
@@ -127,6 +132,20 @@ void outputStream::print(const char* format, ...) {
   va_end(ap);
 }
 
+void hashingOutputStream::print(const char* format, ...)
+{
+	if(toHash)
+	{
+		char buffer[O_BUFLEN];
+		va_list ap;
+		va_start(ap,format);
+		size_t len;
+		const char* str = do_vsnprintf(buffer,O_BUFLEN,format,ap,false,len);
+		updateHash(str);
+		va_end(ap);
+	}
+}
+
 void outputStream::print_cr(const char* format, ...) {
   char buffer[O_BUFLEN];
   va_list ap;
@@ -135,6 +154,31 @@ void outputStream::print_cr(const char* format, ...) {
   const char* str = do_vsnprintf(buffer, O_BUFLEN, format, ap, true, len);
   write(str, len);
   va_end(ap);
+}
+
+void hashingOutputStream::print_cr(const char* format, ...) {
+	if(toHash)
+	{
+	  char buffer[O_BUFLEN];
+	  va_list ap;
+	  va_start(ap, format);
+	  size_t len;
+	  const char* str = do_vsnprintf(buffer, O_BUFLEN, format, ap, true, len);
+	  updateHash(str);
+	  va_end(ap);
+	}
+}
+
+void hashingOutputStream::updateHash(const char* str)
+{
+	int c;
+	while (c =*str++)
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+}
+
+unsigned long hashingOutputStream::getHash()
+{
+	return hash;
 }
 
 void outputStream::vprint(const char *format, va_list argptr) {
