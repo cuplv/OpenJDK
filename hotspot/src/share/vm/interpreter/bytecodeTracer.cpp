@@ -102,10 +102,11 @@ class BytecodePrinter: public BytecodeClosure {
       // _current_method pointer happens to have the same bits as
       // the incoming method.  We could lose a line of trace output.
       // This is acceptable in a debug-only feature.
-      //st->cr();
-      //st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
-      //method->print_name(st);
-      //st->cr();
+      st->cr();
+      if (!newFlag)
+		  st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
+      method->print_name(st);
+      st->cr();
       _current_method = method();
     }
     Bytecodes::Code code;
@@ -117,16 +118,23 @@ class BytecodePrinter: public BytecodeClosure {
     }
     _code = code;
      int bci = bcp - method->code_base();
-    //st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
-    //if (Verbose) {
-      //st->print("%8d  %4d  " INTPTR_FORMAT " " INTPTR_FORMAT " %s",
-           //BytecodeCounter::counter_value(), bci, tos, tos2, Bytecodes::name(code));
-    //} else {
-      //st->print("%8d  %4d  %s",
-           //BytecodeCounter::counter_value(), bci, Bytecodes::name(code));
-    //}
+     if(!newFlag)
+		st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
+    if (Verbose) {
+    	if(!newFlag)
+		  st->print("%8d  %4d  " INTPTR_FORMAT " " INTPTR_FORMAT " %s",
+			   BytecodeCounter::counter_value(), bci, tos, tos2, Bytecodes::name(code));
+    	else
+    		st->print("\t%s",Bytecodes::name(code));
+    } else {
+    	if(!newFlag)
+		  st->print("%8d  %4d  %s",
+			   BytecodeCounter::counter_value(), bci, Bytecodes::name(code));
+    	else
+    		st->print("\t%s", Bytecodes::name(code));
+    }
     _next_pc = is_wide() ? bcp+2 : bcp+1;
-    //print_attributes(bci);
+    print_attributes(bci,st);
     // Set is_wide for the next one, since the caller of this doesn't skip
     // the next bytecode.
     _is_wide = (code == Bytecodes::_wide);
@@ -191,10 +199,39 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
     // virtual one, because the clients of this module go through
     // the static method.
 
+	Thread *thread = Thread::current();
+	ResourceMark rm(thread);
+    static hashingOutputStream h;
+    static hashingOutputStream *hashOut = NULL;
+    if (hashOut == NULL && newFlag) {
+    	h = hashingOutputStream();
+    	hashOut = &h;
+    }
 
+
+    outputStream *os = st;
     if(newFlag)
-    	myMethod(method,bcp);
-    _closure->trace(method, bcp, tos, tos2, st);
+    {
+    	if(!std::strncmp(method->method_holder()->internal_name(),"HelloWorld",20))
+    	{
+    		if(!std::strncmp(method->name()->as_quoted_ascii(),"main",20))
+    		{
+				Bytecodes::Code code;
+				hashOut->setToHash(true);
+
+    			if(!strncmp(Bytecodes::name(code),"return",20))
+    				hashOut->setToHash(false);
+    		}
+    	}
+    	os = hashOut;
+    }
+    //os->print("%s\n","hello");
+
+    //if(newFlag)
+    //	hashOut->print("%s\n","goodbye");
+    _closure->trace(method, bcp, tos, tos2, os);
+    std::cout<<"hash so far: "<<hashOut->getHash()<<std::endl;
+    //_closure->trace(method, bcp, tos, tos2, &h);
   }
 }
 
