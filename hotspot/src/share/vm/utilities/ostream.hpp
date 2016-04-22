@@ -138,6 +138,7 @@ public:
    void cr() {return;}
    void write(const char* str, size_t len) {};
    void setToHash(bool b) {toHash = b;}
+   bool getToHash() {return toHash;}
 };
 // standard output
 // ANSI C++ name collision
