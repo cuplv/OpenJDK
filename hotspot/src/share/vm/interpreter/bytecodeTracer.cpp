@@ -212,15 +212,19 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
     outputStream *os = st;
     if(newFlag)
     {
-    	if(!std::strncmp(method->method_holder()->internal_name(),"HelloWorld",20))
+		if (!std::strcmp(method->method_holder()->internal_name(), "HelloWorld"))
     	{
-    		if(!std::strncmp(method->name()->as_quoted_ascii(),"main",20))
+    		std::cout<<"in first strcmp"<<std::endl;
+    		if(!std::strcmp(method->name()->as_quoted_ascii(),"main"))
     		{
-				Bytecodes::Code code;
+				Bytecodes::Code code=Bytecodes::code_at(method(), bcp);
 				hashOut->setToHash(true);
 
-    			if(!strncmp(Bytecodes::name(code),"return",20))
+    			if(!strcmp(Bytecodes::name(code),"return"))
+    			{
     				hashOut->setToHash(false);
+    				std::cout<<"setToHash(false) called"<<std::endl;
+    			}
     		}
     	}
     	os = hashOut;
@@ -230,7 +234,8 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
     //if(newFlag)
     //	hashOut->print("%s\n","goodbye");
     _closure->trace(method, bcp, tos, tos2, os);
-    std::cout<<"hash so far: "<<hashOut->getHash()<<std::endl;
+    if (hashOut->getToHash())
+		std::cout<<"hash so far: "<<hashOut->getHash()<<std::endl;
     //_closure->trace(method, bcp, tos, tos2, &h);
   }
 }
