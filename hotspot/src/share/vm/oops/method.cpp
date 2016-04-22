@@ -55,7 +55,6 @@
 #include "utilities/quickSort.hpp"
 #include "utilities/xmlstream.hpp"
 
-
 // Implementation of Method
 
 Method* Method::allocate(ClassLoaderData* loader_data,
