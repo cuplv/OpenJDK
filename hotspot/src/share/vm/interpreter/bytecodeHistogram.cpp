@@ -63,6 +63,12 @@ void BytecodeCounter::print() {
   );
 }
 
+void BytecodeCounter::printHash()
+{
+	hashingOutputStream h = hashingOutputStream();
+	tty->print_cr("final hash is %lu",h.getHash());
+}
+
 
 // Helper class for sorting
 
