@@ -49,6 +49,7 @@ class BytecodeCounter: AllStatic {
 
   // Counter printing
   static void   print()                    PRODUCT_RETURN;
+  static void   printHash()                PRODUCT_RETURN;
 };
 
 
