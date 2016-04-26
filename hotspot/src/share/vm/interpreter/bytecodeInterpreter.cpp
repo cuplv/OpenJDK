@@ -170,8 +170,6 @@
                                    topOfStack[Interpreter::expr_index_at(2)]),  \
                                    handle_exception);                      \
     }                                                                      \
-	if (newFlag)
-		std::cout<<"made it here!"<<std::endl;
 }
 #endif
 
