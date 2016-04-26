@@ -306,6 +306,10 @@ void print_statistics() {
   if (CountBytecodes || TraceBytecodes || StopInterpreterAt) {
     BytecodeCounter::print();
   }
+  if (hashBytecodes)
+  {
+	  BytecodeCounter::printHash();
+  }
   if (PrintBytecodePairHistogram) {
     BytecodePairHistogram::print();
   }
