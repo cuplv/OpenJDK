@@ -43,7 +43,7 @@
 bool whetherToSave = 0;
 std::string saved= "";
 void myMethod(methodHandle,address);
-Method* _current_method_for_newFlag;
+Method* _current_method_for_hashBytecodes;
 // Standard closure for BytecodeTracer: prints the current bytecode
 // and its attributes using bytecode-specific information.
 
@@ -103,7 +103,7 @@ class BytecodePrinter: public BytecodeClosure {
       // the incoming method.  We could lose a line of trace output.
       // This is acceptable in a debug-only feature.
       st->cr();
-      if (!newFlag)
+      if (!hashBytecodes)
 		  st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
       method->print_name(st);
       st->cr();
@@ -118,16 +118,16 @@ class BytecodePrinter: public BytecodeClosure {
     }
     _code = code;
      int bci = bcp - method->code_base();
-     if(!newFlag)
+     if(!hashBytecodes)
 		st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
     if (Verbose) {
-    	if(!newFlag)
+    	if(!hashBytecodes)
 		  st->print("%8d  %4d  " INTPTR_FORMAT " " INTPTR_FORMAT " %s",
 			   BytecodeCounter::counter_value(), bci, tos, tos2, Bytecodes::name(code));
     	else
     		st->print("\t%s",Bytecodes::name(code));
     } else {
-    	if(!newFlag)
+    	if(!hashBytecodes)
 		  st->print("%8d  %4d  %s",
 			   BytecodeCounter::counter_value(), bci, Bytecodes::name(code));
     	else
@@ -203,19 +203,18 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
 	ResourceMark rm(thread);
     static hashingOutputStream h;
     static hashingOutputStream *hashOut = NULL;
-    if (hashOut == NULL && newFlag) {
+    if (hashOut == NULL && hashBytecodes) {
     	h = hashingOutputStream();
     	hashOut = &h;
     }
 
 
     outputStream *os = st;
-    if(newFlag)
+   if(hashBytecodes)
     {
-		if (!std::strcmp(method->method_holder()->internal_name(), "HelloWorld"))
+		if (!std::strcmp(method->method_holder()->internal_name(), hashClass))
     	{
-    		std::cout<<"in first strcmp"<<std::endl;
-    		if(!std::strcmp(method->name()->as_quoted_ascii(),"main"))
+    		if(!std::strcmp(method->name()->as_quoted_ascii(), hashMethod))
     		{
 				Bytecodes::Code code=Bytecodes::code_at(method(), bcp);
 				hashOut->setToHash(true);
@@ -223,7 +222,6 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
     			if(!strcmp(Bytecodes::name(code),"return"))
     			{
     				hashOut->setToHash(false);
-    				std::cout<<"setToHash(false) called"<<std::endl;
     			}
     		}
     	}
@@ -231,24 +229,25 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
     }
     //os->print("%s\n","hello");
 
-    //if(newFlag)
+    //if(hashBytecodes)
     //	hashOut->print("%s\n","goodbye");
     _closure->trace(method, bcp, tos, tos2, os);
-    if (hashOut->getToHash())
-		std::cout<<"hash so far: "<<hashOut->getHash()<<std::endl;
+    /*if (hashBytecodes && hashOut->getToHash())
+		std::cout<<"hash so far: "<<hashOut->getHash()<<std::endl;*/
     //_closure->trace(method, bcp, tos, tos2, &h);
   }
 }
 
+/*
 void myMethod(methodHandle method, address bcp)
 {
 	Thread *thread = Thread::current();
 	ResourceMark rm(thread);
     Bytecodes::Code code;
-    /*if (is_wide()) {
+    if (is_wide()) {
       // bcp wasn't advanced if previous bytecode was _wide.
       code = Bytecodes::code_at(method(), bcp+1);
-    } else {*/
+    } else {
       code = Bytecodes::code_at(method(), bcp);
     //}
 
@@ -263,10 +262,10 @@ void myMethod(methodHandle method, address bcp)
 			{
 				whetherToSave = 0;
 				std::cout<<"in third if!"<<std::endl;
-				if (_current_method_for_newFlag != method())
+				if (_current_method_for_hashBytecodes != method())
 				{
 					std::cout<<method->method_holder()->internal_name()<<"."<<method->name()->as_quoted_ascii()<<std::endl;
-					_current_method_for_newFlag = method();
+					_current_method_for_hashBytecodes = method();
 				}
 				std::cout<<"\t"<<Bytecodes::name(code)<<std::endl;
 			}
@@ -277,21 +276,22 @@ void myMethod(methodHandle method, address bcp)
     //int bci = bcp - method->code_base();
     if (whetherToSave)
     {
-    	if (_current_method_for_newFlag != method())
+    	if (_current_method_for_hashBytecodes != method())
     	{
 			std::cout<<method->method_holder()->internal_name()<<"."<<method->name()->as_quoted_ascii()<<std::endl;
-			_current_method_for_newFlag = method();
+			_current_method_for_hashBytecodes = method();
     	}
 		std::cout<<"\t"<<Bytecodes::name(code)<<std::endl;
-    	/*saved.append(std::string(tmp));
+    	saved.append(std::string(tmp));
     	std::cout<<"saved so far:"<<std::endl;
     	std::cout<<saved<<std::endl;
-    	*/
+
     }
 
     //std::cout<<method->method_holder()->internal_name()<<"."<<method->name()->as_quoted_ascii()<<std::endl;
     //std::cout<<Bytecodes::name(code)<<std::endl;
 }
+*/
 
 void BytecodeTracer::trace(methodHandle method, address bcp, outputStream* st) {
   ttyLocker ttyl;  // 5065316: keep the following output coherent
