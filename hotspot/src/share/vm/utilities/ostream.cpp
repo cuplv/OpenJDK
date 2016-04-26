@@ -52,12 +52,13 @@ outputStream::outputStream(int width) {
   _precount    = 0;
   _indentation = 0;
 }
-
+unsigned long hashingOutputStream::hash = 5381;
+/*
 hashingOutputStream::hashingOutputStream()
 {
 	hash = 5381;
 	toHash = false;
-}
+}*/
 outputStream::outputStream(int width, bool has_time_stamps) {
   _width       = width;
   _position    = 0;
