@@ -41,9 +41,8 @@
 #include "utilities/defaultStream.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/taskqueue.hpp"
-
-#include "interpreter/bytecodes.hpp"
 #include <iostream>
+
 #ifdef TARGET_OS_FAMILY_linux
 # include "os_linux.inline.hpp"
 #endif
@@ -2808,10 +2807,31 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
       CommandLineFlags::printFlags(tty, false);
       vm_exit(0);
 
-    }else if (match_option(option,"-newFlag",&tail))
+    }else if (match_option(option,"-hashClass",&tail))
     {
-        newFlag = true;
-        std::cout<<"This is my new flag!"<<std::endl;
+    	if (tail != NULL)
+			hashClass = strchr(tail,'=');
+    	if (hashClass)
+    		hashClass++;
+
+    }else if (match_option(option,"-hashMethod",&tail))
+    {
+    	if (hashClass)
+    	{
+			if (tail != NULL)
+				hashMethod = strchr(tail,'=');
+			if (hashMethod)
+			{
+				hashMethod++;
+				hashBytecodes = true;
+			}
+    	}
+    	else
+    	{
+    		jio_fprintf(defaultStream::output_stream(),
+    				"Must define hashClass with flag: -hashClass=class before defining hashMethod\n");
+    	}
+
 #endif
     // -D
     } else if (match_option(option, "-D", &tail)) {
