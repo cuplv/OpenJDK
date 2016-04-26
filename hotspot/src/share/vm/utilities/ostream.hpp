@@ -125,12 +125,12 @@ class outputStream : public ResourceObj {
 
 class hashingOutputStream : public outputStream{
 protected:
-	unsigned long hash;
+	static unsigned long hash;
 	bool toHash;
 public:
 	//creation
 
-	hashingOutputStream();
+	hashingOutputStream() {toHash = false;}
    void print(const char* format, ...);
    void print_cr(const char* format, ...);
    void updateHash(const char* str);
