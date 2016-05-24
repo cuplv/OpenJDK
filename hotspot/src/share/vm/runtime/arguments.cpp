@@ -2832,6 +2832,32 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
     				"Must define hashClass with flag: -hashClass=class before defining hashMethod\n");
     	}
 
+    }else if (match_option(option,"-traceClass",&tail))
+    {
+    	if (tail != NULL)
+			traceClass = strchr(tail,'=');
+    	if (traceClass)
+    	{
+    		traceClass++;
+    	}
+
+    }else if (match_option(option,"-traceMethod",&tail))
+    {
+    	if (traceClass)
+    	{
+			if (tail != NULL)
+				traceMethod = strchr(tail,'=');
+			if (traceMethod)
+			{
+				traceMethod++;
+				traceSubBytecodes = true;
+			}
+    	}
+    	else
+    	{
+    		jio_fprintf(defaultStream::output_stream(),
+    				"Must define traceClass with flag: -traceClass=class before defining traceMethod\n");
+    	}
 #endif
     // -D
     } else if (match_option(option, "-D", &tail)) {

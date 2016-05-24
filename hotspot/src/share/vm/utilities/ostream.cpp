@@ -51,6 +51,7 @@ outputStream::outputStream(int width) {
   _newlines    = 0;
   _precount    = 0;
   _indentation = 0;
+  toPrint = true;
 }
 unsigned long hashingOutputStream::hash = 5381;
 /*
@@ -66,6 +67,7 @@ outputStream::outputStream(int width, bool has_time_stamps) {
   _precount    = 0;
   _indentation = 0;
   if (has_time_stamps)  _stamp.update();
+  toPrint = true;
 }
 
 void outputStream::update_position(const char* s, size_t len) {
@@ -124,6 +126,8 @@ const char* outputStream::do_vsnprintf(char* buffer, size_t buflen,
 }
 
 void outputStream::print(const char* format, ...) {
+	if (toPrint)
+	{
   char buffer[O_BUFLEN];
   va_list ap;
   va_start(ap, format);
@@ -131,6 +135,20 @@ void outputStream::print(const char* format, ...) {
   const char* str = do_vsnprintf(buffer, O_BUFLEN, format, ap, false, len);
   write(str, len);
   va_end(ap);
+	}
+}
+
+void subOutputStream::print(const char* format, ...) {
+	if (toPrint)
+	{
+	  char buffer[O_BUFLEN];
+	  va_list ap;
+	  va_start(ap, format);
+	  size_t len;
+	  const char* str = do_vsnprintf(buffer, O_BUFLEN, format, ap, false, len);
+	  write(str, len);
+	  va_end(ap);
+	}
 }
 
 void hashingOutputStream::print(const char* format, ...)
@@ -148,6 +166,8 @@ void hashingOutputStream::print(const char* format, ...)
 }
 
 void outputStream::print_cr(const char* format, ...) {
+	if(toPrint)
+	{
   char buffer[O_BUFLEN];
   va_list ap;
   va_start(ap, format);
@@ -155,6 +175,20 @@ void outputStream::print_cr(const char* format, ...) {
   const char* str = do_vsnprintf(buffer, O_BUFLEN, format, ap, true, len);
   write(str, len);
   va_end(ap);
+	}
+}
+
+void subOutputStream::print_cr(const char* format, ...) {
+	if(toPrint)
+	{
+	  char buffer[O_BUFLEN];
+	  va_list ap;
+	  va_start(ap, format);
+	  size_t len;
+	  const char* str = do_vsnprintf(buffer, O_BUFLEN, format, ap, true, len);
+	  write(str, len);
+	  va_end(ap);
+	}
 }
 
 void hashingOutputStream::print_cr(const char* format, ...) {
@@ -236,7 +270,13 @@ void outputStream::sp(int count) {
 }
 
 void outputStream::cr() {
-  this->write("\n", 1);
+	if(toPrint)
+	  this->write("\n", 1);
+}
+
+void subOutputStream::cr() {
+	if(toPrint)
+	  this->write("\n", 1);
 }
 
 void outputStream::stamp() {

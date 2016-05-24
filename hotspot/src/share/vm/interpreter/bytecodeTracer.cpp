@@ -103,7 +103,7 @@ class BytecodePrinter: public BytecodeClosure {
       // the incoming method.  We could lose a line of trace output.
       // This is acceptable in a debug-only feature.
       st->cr();
-      if (!hashBytecodes)
+      if (!hashBytecodes && !traceSubBytecodes)
 		  st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
       method->print_name(st);
       st->cr();
@@ -118,20 +118,20 @@ class BytecodePrinter: public BytecodeClosure {
     }
     _code = code;
      int bci = bcp - method->code_base();
-     if(!hashBytecodes)
+     if(!hashBytecodes && !traceSubBytecodes)
 		st->print("[%ld] ", (long) Thread::current()->osthread()->thread_id());
     if (Verbose) {
-    	if(!hashBytecodes)
+    	if(!hashBytecodes && !traceSubBytecodes)
 		  st->print("%8d  %4d  " INTPTR_FORMAT " " INTPTR_FORMAT " %s",
 			   BytecodeCounter::counter_value(), bci, tos, tos2, Bytecodes::name(code));
     	else
-    		st->print("\t%s",Bytecodes::name(code));
+    		st->print("\t%4d %s",bci,Bytecodes::name(code));
     } else {
-    	if(!hashBytecodes)
+    	if(!hashBytecodes && !traceSubBytecodes)
 		  st->print("%8d  %4d  %s",
 			   BytecodeCounter::counter_value(), bci, Bytecodes::name(code));
     	else
-    		st->print("\t%s", Bytecodes::name(code));
+    		st->print("\t%4d %s", bci,Bytecodes::name(code));
     }
     _next_pc = is_wide() ? bcp+2 : bcp+1;
     print_attributes(bci,st);
@@ -203,9 +203,18 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
 	ResourceMark rm(thread);
     static hashingOutputStream h;
     static hashingOutputStream *hashOut = NULL;
+    static subOutputStream sos;
+    static subOutputStream *sosptr = NULL;
     if (hashOut == NULL && hashBytecodes) {
     	h = hashingOutputStream();
     	hashOut = &h;
+
+    }
+    if (sosptr == NULL && traceSubBytecodes)
+    {
+    	sos = subOutputStream();
+    	sosptr = &sos;
+    	st->setToPrint(false);
     }
 
 
@@ -227,6 +236,27 @@ void BytecodeTracer::trace(methodHandle method, address bcp, uintptr_t tos, uint
     	}
     	os = hashOut;
     }
+
+   else if (traceSubBytecodes)
+   {
+		if (!std::strcmp(method->method_holder()->internal_name(), traceClass))
+    	{
+    		if(!std::strcmp(method->name()->as_quoted_ascii(), traceMethod))
+    		{
+				Bytecodes::Code code=Bytecodes::code_at(method(), bcp);
+				sosptr->setToPrint(true);
+				st->setToPrint(true);
+
+    			if(!strcmp(Bytecodes::name(code),"return"))
+    			{
+    				sosptr->setToPrint(false);
+    				st->setToPrint(false);
+    			}
+    		}
+    	}
+    	os = st;
+
+   }
     //os->print("%s\n","hello");
 
     //if(hashBytecodes)

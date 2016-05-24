@@ -49,6 +49,7 @@ class outputStream : public ResourceObj {
    int _newlines;    // number of '\n' output so far
    julong _precount; // number of chars output, less _position
    TimeStamp _stamp; // for time stamps
+   bool toPrint;
 
    void update_position(const char* s, size_t len);
    static const char* do_vsnprintf(char* buffer, size_t buflen,
@@ -94,6 +95,8 @@ class outputStream : public ResourceObj {
    void sp(int count = 1);
    void cr();
    void bol() { if (_position > 0)  cr(); }
+   void setToPrint(bool b) {toPrint = b;}
+   bool getToPrint() {return toPrint;}
 
    // Time stamp
    TimeStamp& time_stamp() { return _stamp; }
@@ -140,6 +143,20 @@ public:
    void setToHash(bool b) {toHash = b;}
    bool getToHash() {return toHash;}
 };
+
+class subOutputStream : public outputStream{
+protected:
+	bool toPrint;
+public:
+	subOutputStream() {toPrint = false;}
+   void print(const char* format, ...);
+   void print_cr(const char* format, ...);
+   void cr();
+   void setToPrint(bool b) {toPrint = b;}
+   void write(const char* str, size_t len) {};
+   bool getToPrint() {return toPrint;}
+};
+
 // standard output
 // ANSI C++ name collision
 extern outputStream* tty;           // tty output

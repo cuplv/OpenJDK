@@ -1297,6 +1297,15 @@ class CommandLineFlags {
 		  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	    \
   develop(ccstr, hashMethod, NULL,											\
 		  "Method to hash bytecodes for")									\
+		  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	\
+  develop(ccstr, traceClass, NULL,											\
+		  "Class to trace bytecodes around")								\
+		  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	    \
+  develop(ccstr, traceMethod,NULL,											\
+		  "Method to trace bytecodes around")								\
+		  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	  	\
+  develop(bool,traceSubBytecodes, false, 									\
+		  "Trace bytecodes for given class / method")						\
                                                                             \
   develop(bool, TraceClassInitialization, false,                            \
           "Trace class initialization")                                     \
