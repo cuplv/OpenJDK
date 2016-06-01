@@ -1,0 +1,10 @@
+# ignore any files that begin with a dot
+.*
+
+# ignore the build folder
+build/
+
+# ignore the mercurial state files
+hotspot/.hg/dirstate
+jdk/.hg/dirstate
+
