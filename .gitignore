@@ -1,5 +1,6 @@
 # ignore any files that begin with a dot
 .*
+.hg/
 
 # ignore the build folder
 build/
